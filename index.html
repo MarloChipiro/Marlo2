@@ -42,6 +42,7 @@
             text-decoration: none;
             font-size: 15px;
             line-height: 20px;
+            cursor: pointer;
         }
 
         .topnav a:hover {
@@ -63,6 +64,51 @@
             height: auto;
             margin: 0;
             padding: 0;
+        }
+
+        /* Overlay Views for Home, Data Sources, and Contact */
+        .view-overlay {
+            display: none;
+            position: absolute;
+            top: 48px;
+            bottom: 32px;
+            width: 100%;
+            background-color: #f9f9f9;
+            z-index: 999;
+            overflow-y: auto;
+            box-sizing: border-box;
+            padding: 40px 20px;
+        }
+
+        .content-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: #333;
+        }
+
+        .content-card h2 {
+            color: #2c7da0;
+            margin-top: 0;
+            border-bottom: 2px solid #1e6f3f;
+            padding-bottom: 8px;
+        }
+
+        .content-card ul {
+            line-height: 1.8;
+        }
+
+        .content-card a {
+            color: #2c7da0;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .content-card a:hover {
+            text-decoration: underline;
         }
 
         /* OpenLayers General Control Overrides */
@@ -120,10 +166,10 @@
 
         <!-- Navigation Menu -->
         <div class="topnav">
-            <a class="active" href="#">Home</a>
-            <a href="#">Infrastructure Map</a>
-            <a href="#">Data Sources</a>
-            <a href="#">Contact</a>
+            <a id="nav-map" class="active" onclick="switchTab('map')">Infrastructure Map</a>
+            <a id="nav-home" onclick="switchTab('home')">Home</a>
+            <a id="nav-sources" onclick="switchTab('sources')">Data Sources</a>
+            <a id="nav-contact" onclick="switchTab('contact')">Contact</a>
         </div>
 
         <!-- OpenLayers Map Container -->
@@ -131,6 +177,46 @@
             <div id="popup" class="ol-popup">
                 <a href="#" id="popup-closer" class="ol-popup-closer"></a>
                 <div id="popup-content"></div>
+            </div>
+        </div>
+
+        <!-- Home Page Overlay -->
+        <div id="view-home" class="view-overlay">
+            <div class="content-card">
+                <h2>About the Application</h2>
+                <p>Welcome to the <strong>Zimbabwe Infrastructure & GIS Web Application</strong>. This platform provides an interactive geospatial analytics interface designed to visualize key national infrastructure metrics across Zimbabwe.</p>
+                <p>Features integrated into this web application include:</p>
+                <ul>
+                    <li>Interactive visualization of regional provincial boundaries and district delineations.</li>
+                    <li>Spatial distribution of health centres, secondary schools, and major urban centers.</li>
+                    <li>High-resolution transport network analysis including national primary and secondary road networks.</li>
+                    <li>Custom spatial navigation tools, search capabilities, and map extent resets for Harare.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Data Sources Page Overlay -->
+        <div id="view-sources" class="view-overlay">
+            <div class="content-card">
+                <h2>Geospatial Data Sources</h2>
+                <p>The layers rendered across this platform are sourced from open spatial repositories and institutional clearinghouses:</p>
+                <ul>
+                    <li><strong>HDX Zimbabwe:</strong> <a href="https://data.humdata.org/group/zwe" target="_blank">Humanitarian Data Exchange (OCHA)</a> – Administrative boundaries, operational health facility layers, and population datasets.</li>
+                    <li><strong>OpenStreetMap (OSM):</strong> <a href="https://www.openstreetmap.org" target="_blank">OSM Contributors</a> – Transport infrastructure, road classification networks, and populated places data.</li>
+                    <li><strong>ZIMSTAT & Spatial Repositories:</strong> National administrative datasets digitized via QGIS for spatial suitability analysis and geospatial infrastructure planning.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Contact Page Overlay -->
+        <div id="view-contact" class="view-overlay">
+            <div class="content-card">
+                <h2>Contact & Developer Information</h2>
+                <p>For inquiries, spatial data integration requests, or technical support regarding this web application, please reach out via email:</p>
+                <ul>
+                    <li><strong>Developer Email:</strong> <a href="mailto:marlochipiro@gmail.com">marlochipiro@gmail.com</a></li>
+                    <li><strong>Project Unit:</strong> Geospatial Intelligence Unit | Zimbabwe Infrastructure Mapping</li>
+                </ul>
             </div>
         </div>
 
@@ -168,8 +254,38 @@
         <script src="./resources/Autolinker.min.js"></script>
         <script src="./resources/qgis2web.js"></script>        
 
-        <!-- Custom OpenLayers Home Control Injection -->
+        <!-- Single Page Navigation & Custom OpenLayers Home Control -->
         <script>
+            function switchTab(tabName) {
+                // Hide all overlays
+                document.getElementById('view-home').style.display = 'none';
+                document.getElementById('view-sources').style.display = 'none';
+                document.getElementById('view-contact').style.display = 'none';
+
+                // Reset active navigation styles
+                document.getElementById('nav-map').classList.remove('active');
+                document.getElementById('nav-home').classList.remove('active');
+                document.getElementById('nav-sources').classList.remove('active');
+                document.getElementById('nav-contact').classList.remove('active');
+
+                // Display selected view and set active tab
+                if (tabName === 'map') {
+                    document.getElementById('nav-map').classList.add('active');
+                    if (typeof map !== 'undefined') {
+                        map.updateSize();
+                    }
+                } else if (tabName === 'home') {
+                    document.getElementById('view-home').style.display = 'block';
+                    document.getElementById('nav-home').classList.add('active');
+                } else if (tabName === 'sources') {
+                    document.getElementById('view-sources').style.display = 'block';
+                    document.getElementById('nav-sources').classList.add('active');
+                } else if (tabName === 'contact') {
+                    document.getElementById('view-contact').style.display = 'block';
+                    document.getElementById('nav-contact').classList.add('active');
+                }
+            }
+
             (function() {
                 // Define OpenLayers Home Button Control
                 window.HomeControl = function(opt_options) {
@@ -183,7 +299,7 @@
                     element.appendChild(button);
 
                     button.addEventListener('click', function() {
-                        // Transforms EPSG:4326 (Lat/Lon) to EPSG:3857 (OpenLayers Default Projection)
+                        switchTab('map');
                         var harareCoords = ol.proj.fromLonLat([31.0335, -17.8252]);
                         map.getView().animate({
                             center: harareCoords,
